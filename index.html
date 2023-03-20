@@ -1,0 +1,172 @@
+<html>
+    <!--News app + translate into designated lang-->
+
+    <head>
+
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+        <!--Search bar-->
+        <h1>News App + Translate</h1>
+        <div>
+            <h3>Anggota Kelompok : Muhammad Luthfi Azzahra Rammadhani (21/478530/SV/19332)</h3>
+            <h3>Muhammad Naufal Rosyad (21/48956/SV/20025)</h3>
+            <h3>Hafizh Favian Setiadhy Pratama (21/477120/SV/19149)</h3>
+        </div>
+        <form>
+            <input type="text" placeholder="Search Title" id="search"></input>
+
+            Destination Language:
+            <select name="language" id="language">
+                
+            </select>
+
+            <input type="button" onclick="getData()" value="Search"></input>
+        </form>
+        <hr>
+        <div class="result-original">
+            News In English : 
+            <h1 id="result-original-title"></h1>
+            <div id="result-original-body"></div>
+            
+        </div>
+        <hr>
+        <div class="result-translated">
+            News In Chosen Language : 
+            <h1 id="result-translated-title"></h1>
+            <div id="result-translated-body"></div>
+
+        </div>
+        <hr>
+        <br>
+        <p>News URL : </p>
+        <a id="result-original-link" target="_blank" href="!#"></a>
+
+        
+
+        <script>
+            const NEWS_API_KEY = "&apiKey=108803a8b0164ed88f5362ab5f40832c";
+            const BASE_URL = "https://newsapi.org/v2/everything?q=";
+            // format : https://newsapi.org/v2/everything?q={something  }&apiKey=108803a8b0164ed88f5362ab5f40832c
+
+            const options = {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': '89ff9ed75fmsh8fd2e2d0f24d957p1e3416jsn43f4db6f8c4d',
+		            'X-RapidAPI-Host': 'long-translator.p.rapidapi.com'
+                }
+            };
+
+            
+
+            function getData() {
+                searchedKeyword = document.getElementById('search').value;
+                chosenLang = document.getElementById('language').value;
+                
+                const FETCH_URL = BASE_URL+searchedKeyword+NEWS_API_KEY;
+
+                var original;
+                let originalDesc;
+                let translatedTitle;
+                let translatedDesc;
+                
+                // get most popular news
+                // response['articles'][0]
+                fetch(FETCH_URL)
+                .then(response => response.json())
+                .then(response => setBody(response, chosenLang))
+                .catch(error => console.log(error));
+
+            }
+
+            function setBody(data, targetLang) {
+                document.getElementById("result-original-title").innerText = data['articles'][0].title
+                document.getElementById("result-original-body").innerText = data['articles'][0].description;
+
+                const link = data['articles'][0].url;
+                const linkBox = document.getElementById("result-original-link");
+                linkBox.innerText = "Read More";
+                linkBox.href = link;
+
+                
+
+                translate(data, targetLang);
+            }
+
+            function translate(data, targetLang) {
+                const encodedParamsTitle = new URLSearchParams();
+                encodedParamsTitle.append("source_language", "en");
+                encodedParamsTitle.append("target_language", targetLang);
+                encodedParamsTitle.append("text", data['articles'][0].title);
+
+                const optionsTitle = {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/x-www-form-urlencoded',
+		                'X-RapidAPI-Key': '89ff9ed75fmsh8fd2e2d0f24d957p1e3416jsn43f4db6f8c4d',
+		                'X-RapidAPI-Host': 'long-translator.p.rapidapi.com'
+                    },
+                    body: encodedParamsTitle
+                };
+
+                const encodedParamsDescription = new URLSearchParams();
+                encodedParamsDescription.append("source_language", "en");
+                encodedParamsDescription.append("target_language", targetLang);
+                encodedParamsDescription.append("text", data['articles'][0].description);
+
+                const optionsDescription = {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/x-www-form-urlencoded',
+		                'X-RapidAPI-Key': '89ff9ed75fmsh8fd2e2d0f24d957p1e3416jsn43f4db6f8c4d',
+		                'X-RapidAPI-Host': 'long-translator.p.rapidapi.com'
+                    },
+                    body: encodedParamsDescription
+                };
+
+                // fetch twice
+                fetch('https://long-translator.p.rapidapi.com/translate', optionsTitle)
+                    .then(response => response.json())
+                    .then(response => setTranslatedTitle(response))
+                    .catch(err => console.error(err));
+
+                fetch('https://long-translator.p.rapidapi.com/translate', optionsDescription)
+                    .then(response => response.json())
+                    .then(response => setTranslatedDescription(response))
+                    .catch(err => console.error(err));
+            }
+
+            function setTranslatedTitle(title) {
+                console.log(title)
+                document.getElementById("result-translated-title").innerText = title.data.translatedText;
+            }
+
+            function setTranslatedDescription(description) {
+                console.log(description)
+                document.getElementById("result-translated-body").innerText = description.data.translatedText;
+            }
+
+
+            //response['data']['languages']
+            // get all languages
+            fetch('https://long-translator.p.rapidapi.com/languages', options)
+                .then(response => response.json())
+                .then(response => 
+                response['data']['languages'].map((language) => {
+                    const langBox = document.createElement("option");
+                    langBox.value = language.code;
+                    langBox.innerText = language.name;
+
+                    document.getElementById('language').appendChild(langBox);
+                }) 
+                
+                )
+                .catch(err => console.error(err));
+            
+            
+
+            
+        </script>
+    </body>
+</html>
